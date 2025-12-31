@@ -1,0 +1,47 @@
+steps:
+
+# ---------------- PRE-BUILD ----------------
+- name: gcr.io/cloud-builders/gcloud
+  entrypoint: bash
+  args:
+    - -c
+    - |
+      echo "Authenticating Docker to Artifact Registry"
+      gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
+
+      REPOSITORY_URI=us-east1-docker.pkg.dev/project-045a9bc2-2b2f-428e-9c0/demo-repo/qa-be
+      COMMIT_HASH=$(echo $COMMIT_SHA | cut -c 1-7)
+      IMAGE_TAG=${COMMIT_HASH:=latest}
+
+# ---------------- BUILD ----------------
+- name: gcr.io/cloud-builders/docker
+  args: ["build", "--platform=linux/amd64", "-t", "qa-be", ".", "--no-cache"]
+
+- name: gcr.io/cloud-builders/docker
+  args: ["tag", "qa-be:latest", "us-east1-docker.pkg.dev/project-045a9bc2-2b2f-428e-9c0/demo-repo/qa-be:$IMAGE_TAG"]
+
+- name: gcr.io/cloud-builders/docker
+  args: ["tag", "us-east1-docker.pkg.dev/project-045a9bc2-2b2f-428e-9c0/demo-repo/qa-be:$IMAGE_TAG", "us-east1-docker.pkg.dev/project-045a9bc2-2b2f-428e-9c0/demo-repo/qa-be:latest"]
+
+# ---------------- POST-BUILD ----------------
+- name: gcr.io/cloud-builders/docker
+  args: ["push", "us-east1-docker.pkg.dev/project-045a9bc2-2b2f-428e-9c0/demo-repo/qa-be:latest"]
+
+- name: gcr.io/cloud-builders/docker
+  args: ["push", "us-east1-docker.pkg.dev/project-045a9bc2-2b2f-428e-9c0/demo-repo/qa-be:$IMAGE_TAG"]
+
+- name: gcr.io/cloud-builders/gcloud
+  entrypoint: bash
+  args:
+    - -c
+    - |
+      printf '[{"name":"qa-be-dev","imageUri":"%s"}]' \
+      us-east1-docker.pkg.dev/project-045a9bc2-2b2f-428e-9c0/demo-repo/qa-be:$IMAGE_TAG \
+      > imagedefinitions.json
+      cat imagedefinitions.json
+
+artifacts:
+  objects:
+    location: gs://demo-build-artifacts
+    paths:
+      - imagedefinitions.json
