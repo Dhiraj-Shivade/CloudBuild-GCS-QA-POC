@@ -3,16 +3,20 @@ substitutions:
   _IMAGE_TAG: $SHORT_SHA
 
 steps:
+  # 1. Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '--platform=linux/amd64'
       - '--no-cache'
-      - '-t', '${_REPOSITORY_URI}:${_IMAGE_TAG}'
-      - '-t', '${_REPOSITORY_URI}:latest'
+      - '-t'
+      - '${_REPOSITORY_URI}:${_IMAGE_TAG}'
+      - '-t'
+      - '${_REPOSITORY_URI}:latest'
       - '.'
-    dir: 'QA-app'
+    dir: '.'
 
+  # 2. Generate imagedefinitions.json
   - name: 'gcr.io/cloud-builders/bash'
     args:
       - '-c'
