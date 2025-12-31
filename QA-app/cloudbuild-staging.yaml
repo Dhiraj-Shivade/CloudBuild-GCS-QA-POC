@@ -3,16 +3,20 @@ substitutions:
   _IMAGE_TAG: $SHORT_SHA
 
 steps:
+  # 1. Build the Docker image (equivalent to AWS 'build' phase)
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '--platform=linux/amd64'
       - '--no-cache'
-      - '-t', '${_REPOSITORY_URI}:${_IMAGE_TAG}'
-      - '-t', '${_REPOSITORY_URI}:latest'
+      - '-t'
+      - '${_REPOSITORY_URI}:${_IMAGE_TAG}'
+      - '-t'
+      - '${_REPOSITORY_URI}:latest'
       - '.'
-    dir: 'QA-app'
+    dir: '.'
 
+  # 2. Generate imagedefinitions.json (equivalent to AWS 'post_build' phase)
   - name: 'gcr.io/cloud-builders/bash'
     args:
       - '-c'
@@ -20,10 +24,12 @@ steps:
         printf '[{"name":"qa-be-staging","imageUri":"%s"}]' \
         "${_REPOSITORY_URI}:${_IMAGE_TAG}" > imagedefinitions.json
 
+# Automatically push images to Artifact Registry
 images:
   - '${_REPOSITORY_URI}:${_IMAGE_TAG}'
   - '${_REPOSITORY_URI}:latest'
 
+# Upload the JSON file to GCS (equivalent to AWS 'artifacts' phase)
 artifacts:
   objects:
     location: 'gs://demo-build-artifacts'
