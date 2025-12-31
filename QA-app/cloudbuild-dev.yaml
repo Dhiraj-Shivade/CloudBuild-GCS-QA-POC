@@ -1,20 +1,20 @@
 substitutions:
   _REPOSITORY_URI: us-east1-docker.pkg.dev/project-045a9bc2-2b2f-428e-9c0/demo-repo/qa-be
-  _IMAGE_TAG: $SHORT_SHA # Equivalent to COMMIT_HASH in AWS
+  _IMAGE_TAG: $SHORT_SHA
 
 steps:
-  # Phase: build
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '--platform=linux/amd64'
-      - '--no-cache' # Added to match your AWS requirement
-      - '-t', '${_REPOSITORY_URI}:${_IMAGE_TAG}'
-      - '-t', '${_REPOSITORY_URI}:latest'
+      - '--no-cache'
+      - '-t'
+      - '${_REPOSITORY_URI}:${_IMAGE_TAG}'
+      - '-t'
+      - '${_REPOSITORY_URI}:latest'
       - '.'
-    dir: 'QA-app'
+    dir: '.' # Changed to '.' since you are running from inside the QA-app folder
 
-  # Phase: post_build (Writing image definitions)
   - name: 'gcr.io/cloud-builders/bash'
     args:
       - '-c'
@@ -22,12 +22,10 @@ steps:
         printf '[{"name":"qa-be-dev","imageUri":"%s"}]' \
         "${_REPOSITORY_URI}:${_IMAGE_TAG}" > imagedefinitions.json
 
-# Phase: post_build (Pushing images)
 images:
   - '${_REPOSITORY_URI}:${_IMAGE_TAG}'
   - '${_REPOSITORY_URI}:latest'
 
-# Phase: artifacts
 artifacts:
   objects:
     location: 'gs://demo-build-artifacts'
