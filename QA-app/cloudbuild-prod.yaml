@@ -3,32 +3,29 @@ substitutions:
   _IMAGE_TAG: $SHORT_SHA
 
 steps:
-  - name: gcr.io/cloud-builders/docker
+  - name: 'gcr.io/cloud-builders/docker'
     args:
-      - build
-      - --platform=linux/amd64
-      - -t
-      - ${_REPOSITORY_URI}:${_IMAGE_TAG}
-      - -t
-      - ${_REPOSITORY_URI}:latest
-      - .
-    dir: QA-app
+      - 'build'
+      - '--platform=linux/amd64'
+      - '--no-cache'
+      - '-t', '${_REPOSITORY_URI}:${_IMAGE_TAG}'
+      - '-t', '${_REPOSITORY_URI}:latest'
+      - '.'
+    dir: 'QA-app'
 
-  - name: gcr.io/cloud-builders/docker
-    args: [push, ${_REPOSITORY_URI}:latest]
-
-  - name: gcr.io/cloud-builders/docker
-    args: [push, ${_REPOSITORY_URI}:${_IMAGE_TAG}]
-
-  - name: gcr.io/cloud-builders/bash
+  - name: 'gcr.io/cloud-builders/bash'
     args:
-      - -c
+      - '-c'
       - |
         printf '[{"name":"qa-be-prod","imageUri":"%s"}]' \
         "${_REPOSITORY_URI}:${_IMAGE_TAG}" > imagedefinitions.json
 
+images:
+  - '${_REPOSITORY_URI}:${_IMAGE_TAG}'
+  - '${_REPOSITORY_URI}:latest'
+
 artifacts:
   objects:
-    location: gs://demo-build-artifacts
+    location: 'gs://demo-build-artifacts'
     paths:
-      - imagedefinitions.json
+      - 'imagedefinitions.json'
