@@ -1,10 +1,7 @@
 substitutions:
-  # Details for the Production environment
   _REGION: us-east1
-  _PROJECT_ID: project-045a9bc2-2b2f-428e-9c0
-  _REPOSITORY_NAME: demo-repo
   _SERVICE_NAME: qa-be-prod
-  _REPOSITORY_URI: us-east1-docker.pkg.dev/project-045a9bc2-2b2f-428e-9c0/demo-repo/qa-be-prod
+  _REPOSITORY_URI: us-east1-docker.pkg.dev/project-045a9bc2-2b2f-428e-9c0/demo-repo/qa-be
   _IMAGE_TAG: $SHORT_SHA
 
 steps:
