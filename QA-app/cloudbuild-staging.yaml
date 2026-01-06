@@ -1,6 +1,6 @@
 substitutions:
   _REGION: us-east1
-  _SERVICE_NAME: qa-be-dev
+  _SERVICE_NAME: qa-be-staging
   _REPOSITORY_URI: us-east1-docker.pkg.dev/project-045a9bc2-2b2f-428e-9c0/demo-repo/qa-be
   _IMAGE_TAG: $SHORT_SHA
 
