@@ -1,37 +1,53 @@
 substitutions:
+  # Extracted from your provided URI
+  _REGION: us-east1
+  _PROJECT_ID: project-045a9bc2-2b2f-428e-9c0
+  _REPOSITORY_NAME: demo-repo
+  _SERVICE_NAME: qa-be-dev
+  # Full path to the image
   _REPOSITORY_URI: us-east1-docker.pkg.dev/project-045a9bc2-2b2f-428e-9c0/demo-repo/qa-be
   _IMAGE_TAG: $SHORT_SHA
 
 steps:
   # Step 1: Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build'
     args:
       - 'build'
       - '--platform=linux/amd64'
-      - '--no-cache'
       - '-t'
       - '${_REPOSITORY_URI}:${_IMAGE_TAG}'
       - '-t'
       - '${_REPOSITORY_URI}:latest'
       - '.'
 
-  # Step 2: Generate imagedefinitions.json using Cloud SDK
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        printf '[{"name":"qa-be-dev","imageUri":"%s"}]' \
-        "${_REPOSITORY_URI}:${_IMAGE_TAG}" > imagedefinitions.json
+  # Step 2: Push images to Artifact Registry
+  # This makes the images available for the deployment step
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push'
+    args: ['push', '--all-tags', '${_REPOSITORY_URI}']
 
-# Pushes images to Artifact Registry
+  # Step 3: Deploy to Cloud Run
+  # This replaces the AWS "imagedefinitions.json" + "S3 Bucket" workflow
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--image'
+      - '${_REPOSITORY_URI}:${_IMAGE_TAG}'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+# Declaring images here links the build to the Artifact Registry
 images:
   - '${_REPOSITORY_URI}:${_IMAGE_TAG}'
   - '${_REPOSITORY_URI}:latest'
 
-# Uploads artifacts to GCS
-artifacts:
-  objects:
-    location: 'gs://demo-build-artifacts/dev'
-    paths:
-      - 'imagedefinitions.json'
+options:
+  logging: CLOUD_LOGGING_ONLY
