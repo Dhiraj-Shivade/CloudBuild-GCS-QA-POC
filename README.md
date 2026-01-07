@@ -105,22 +105,48 @@ Prod          qa-be-prod        qa-be-prod       /**
 
 5. Deployment Guide
 Manual Deployment (from Cloud Shell)
-Navigate to the app directory:
 
+For automatic trigger, update deployment step(step-3) with 'update-env-vars' flag:
+e.g.
+# Step 3: Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--image'
+      - '${_REPOSITORY_URI}:${_IMAGE_TAG}'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+**      - '--update-env-vars'
+      - 'ENV=dev,IMAGE_TAG=${_IMAGE_TAG}'**
+
+Navigate to the app directory:
 Bash
 cd ~/CloudBuild-GCS-QA-POC/QA-app
 
 Run the specific environment build:
 
 Bash
-# DEV
-gcloud builds submit --config cloudbuild-dev.yaml .
+# DEV (manual testing/CLI)
+gcloud builds submit --config cloudbuild-dev.yaml --substitutions=_IMAGE_TAG=$(git rev-parse --short HEAD) .
 
-# STAGING
-gcloud builds submit --config cloudbuild-staging.yaml .
+Automatic trigger- gcloud builds submit --config cloudbuild-dev.yaml .
+
+# STAGING (manual testing/CLI)
+gcloud builds submit --config cloudbuild-staging.yaml --substitutions=_IMAGE_TAG=$(git rev-parse --short HEAD) .
+
+Automatic trigger- gcloud builds submit --config cloudbuild-staging.yaml .
 
 # PROD
-gcloud builds submit --config cloudbuild-prod.yaml .
+gcloud builds submit --config cloudbuild-prod.yaml --substitutions=_IMAGE_TAG=$(git rev-parse --short HEAD) .
+
+Automatic trigger- gcloud builds submit --config cloudbuild-prod.yaml .
 
 Note: When using automated GitHub Triggers, the $SHORT_SHA is injected automatically by GCP.
 
