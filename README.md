@@ -106,7 +106,7 @@ Prod          qa-be-prod        qa-be-prod       /**
 5. Deployment Guide
 Manual Deployment (from Cloud Shell)
 
-For automatic trigger, update deployment step(step-3) with 'update-env-vars' flag:
+For automatic trigger, update deployment step(step-3) with 'update-env-vars' flag for respective environments(e.g. staging/prod):
 e.g.
 # Step 3: Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
